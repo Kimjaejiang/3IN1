@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  DUO 模块图标（前景层）。
+
+  字形 DUO，其中 O 复用状态胶囊的电池环几何：
+  240° 下开口底环 + 一段顺时针“电量”亮弧（65%），开口朝正下方。
+
+  配色为本模块自有配色，底色 #0B0F14，前景紫 / 天蓝 / 绿。
+
+  尺寸：字面 y 35..73（高 38），笔画 6.5。
+  安全区校验（中心 54,54，半径 33，含半笔画 3.25）：
+    U 两角 23.2 / 25.2，O 右 31.8，均在安全圆内；
+    D 左侧两角 36.3，超出安全圆 3.3。
+  D 的越界是三个字母并排的固有代价——把整词压进 R=33 需把
+  字高降到 25 以下，会明显难认。ColorOS 用圆角方形遮罩
+  （settings: smooth_corner=30, smooth_weight=0.99），
+  四角区域实际会保留，故按当前尺度绘制。
+-->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+
+    <!--
+      ============================== D ==============================
+      竖笔 x=27；碗圆心 (45,54) 半径 18，与竖笔共高（y 35..73）
+    -->
+    <path
+        android:pathData="M27,35 L27,73"
+        android:strokeColor="#8B7CF6"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <path
+        android:pathData="M27,35 L45,35 A18,18 0 0 1 45,73 L27,73"
+        android:strokeColor="#8B7CF6"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!--
+      ============================== U ==============================
+      两竖笔 x=48 / x=65，碗圆心 (56.5,63) 半径 8.5 -> 底缘 71.5
+    -->
+    <path
+        android:pathData="M48,35 L48,63 A8.5,8.5 0 0 0 65,63 L65,35"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:fillColor="#00000000" />
+
+    <!--
+      ========================== O = 电池环 ==========================
+      圆心 (73,54)，半径 9.5，线宽 6.5 -> 外缘 x[63.5,82.5] y[44.5,63.5]
+      底环：150° 起顺时针 240° 至 390°（开口朝正下方，与胶囊一致）
+      电量弧：150° 起顺时针 156°（240° 的 65%）
+      端点由极坐标计算，已核对，勿手改。
+    -->
+    <!-- 底环（暗色，表示剩余行程） -->
+    <path
+        android:pathData="M64.77,58.75 A9.5,9.5 0 1 1 81.23,58.75"
+        android:strokeColor="#38BDF8"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+    <!-- 电量弧（亮色，65%） -->
+    <path
+        android:pathData="M64.77,58.75 A9.5,9.5 0 0 1 78.58,46.31"
+        android:strokeColor="#34D399"
+        android:strokeWidth="6.5"
+        android:strokeLineCap="round"
+        android:fillColor="#00000000" />
+
+</vector>
