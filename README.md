@@ -1,12 +1,27 @@
-# 3IN1
+# 3IN1 · ColorOS 17 适配版
 
 <p align="center"><img src="app/src/main/res/drawable-nodpi/app_logo.png" width="96" alt="3IN1 Logo"></p>
 
-> **0.1.6 compat 预发布。** 基于 ColorOS 16 机型开发与验证，不是全机型支持声明；其他 Android/ColorOS 版本不作兼容保证。
+> **ColorOS 17 适配版**。本仓库仅在 [上游 FangFangTu150/3IN1](https://github.com/FangFangTu150/3IN1) 基础上做 ColorOS 17 适配，不改变原有功能与设计。
 
-[下载 APK 与校验文件](https://github.com/FangFangTu150/3IN1/releases/tag/v0.1.6) · [提交问题](https://github.com/FangFangTu150/3IN1/issues) · [安装与恢复](docs/INSTALL.md)
+[下载 APK](https://github.com/Kimjaejiang/3IN1/releases) · [提交问题](https://github.com/Kimjaejiang/3IN1/issues)
 
-3IN1 是需要 Root/LSPosed（或兼容 legacy Xposed 框架）的 Android 模块，在 SystemUI 原有电池宿主内绘制电量、Wi-Fi 与蜂窝信号组合指示器。
+## 鸣谢
+
+- 上游项目：[FangFangTu150/3IN1](https://github.com/FangFangTu150/3IN1)（ColorOS 16 原版）
+- 本仓库仅针对 ColorOS 17 做了以下适配：
+  - `mIgnoredSlots` 类型兼容（C17 为 `HashSet`，C16 为 `List`）
+  - `xposedminversion` 提升至 102
+  - 图标改为 DUO 字母样式
+
+## 兼容性范围
+
+| 项目 | 值 |
+| --- | --- |
+| 适配版本 | ColorOS 17 / Android 16+ |
+| 真机验证 | 一加 PLK110 / ColorOS 17 |
+| LSPosed | API 102+ |
+| 作用域 | 仅 `com.android.systemui` |
 
 ## 范围与边界
 
