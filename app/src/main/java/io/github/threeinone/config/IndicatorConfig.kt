@@ -43,6 +43,7 @@ data class IndicatorConfig(
         const val FILE = "indicator"
         const val REFRESH = "$PACKAGE.REFRESH"
         const val REFRESH_PERMISSION = "$PACKAGE.permission.REFRESH"
+        const val EXTRA_CONFIG = "config"
         const val PROBE_TOKEN = "probeToken"
         const val PROBE_STATUS = "probeStatus"
         const val PROBE_TIME = "probeTime"

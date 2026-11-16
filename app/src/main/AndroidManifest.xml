@@ -2,6 +2,9 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <permission android:name="io.github.threeinone.permission.REFRESH" android:protectionLevel="signature" />
     <uses-permission android:name="io.github.threeinone.permission.REFRESH" />
+    <!-- Lets the settings app publish the configuration to Settings.Secure, the only channel
+         SystemUI can still read after a reboot. Granted once via `pm grant`. -->
+    <uses-permission android:name="android.permission.WRITE_SECURE_SETTINGS" />
     <queries><package android:name="com.android.systemui" /></queries>
     <application
         android:allowBackup="false"
@@ -11,8 +14,7 @@
         android:theme="@style/AppTheme"
         android:supportsRtl="true">
         <meta-data android:name="xposedmodule" android:value="true" />
-        <meta-data android:name="xposeddescription" android:value="电量、Wi-Fi 与蜂窝信号三合一 · ColorOS 16" />
-        <meta-data android:name="xposedminversion" android:value="93" />
+        <meta-data android:name="xposeddescription" android:value="电量、Wi-Fi 与蜂窝信号三合一 · ColorOS 16/17" />
         <meta-data android:name="xposedsharedprefs" android:value="true" />
         <meta-data android:name="xposedscope" android:resource="@array/xposed_scope" />
         <activity android:name=".ui.MainActivity" android:exported="true">

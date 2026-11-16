@@ -1,4 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="launcher_background">#F3F6F8</color>
+    <!-- The glyph is white, so both variants need a dark backdrop to stay legible. -->
+    <color name="launcher_background">#2B2F33</color>
+    <!-- Used by the night-qualified icon; matches the reference artwork's backdrop. -->
+    <color name="launcher_background_dark">#1B1E21</color>
 </resources>

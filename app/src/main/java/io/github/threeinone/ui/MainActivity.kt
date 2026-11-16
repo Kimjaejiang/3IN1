@@ -10,8 +10,10 @@ import android.graphics.Typeface
 import android.graphics.drawable.GradientDrawable
 import android.net.Uri
 import android.os.*
+import android.provider.Settings
 import android.view.*
 import android.widget.*
+import io.github.threeinone.config.ConfigTransfer
 import io.github.threeinone.config.IndicatorConfig
 import io.github.threeinone.config.PreferenceMigration
 import io.github.threeinone.config.SafePreferences
@@ -428,9 +430,31 @@ class MainActivity : Activity() {
     companion object {
         private val revisions = AtomicLong()
         private fun notifySystem(context: Context, token: String) {
-            context.sendBroadcast(Intent(IndicatorConfig.REFRESH)
+            // libxposed API 102 no longer exposes the settings file to SystemUI, and SystemUI
+            // cannot resolve this app's provider on ColorOS, so ship the values in the broadcast.
+            @Suppress("DEPRECATION")
+            val config = context.getSharedPreferences(IndicatorConfig.FILE, Context.MODE_PRIVATE)
+            val intent = Intent(IndicatorConfig.REFRESH)
                 .setPackage("com.android.systemui")
-                .putExtra(IndicatorConfig.PROBE_TOKEN, token))
+                .putExtra(IndicatorConfig.PROBE_TOKEN, token)
+            val exported = Bundle()
+            for ((key, value) in config.all) {
+                when (value) {
+                    is Boolean -> exported.putBoolean(key, value)
+                    is Int -> exported.putInt(key, value)
+                    is Long -> exported.putLong(key, value)
+                    is Float -> exported.putFloat(key, value)
+                    is String -> exported.putString(key, value)
+                }
+            }
+            intent.putExtra(IndicatorConfig.EXTRA_CONFIG, exported)
+            context.sendBroadcast(intent)
+            // Durable copy: the broadcast only reaches SystemUI while this app is running, so a
+            // reboot would otherwise leave the module without any configuration.
+            runCatching {
+                Settings.Secure.putString(context.contentResolver, ConfigTransfer.SECURE_KEY,
+                    ConfigTransfer.encode(config.all))
+            }
         }
         private const val LOCKED_MESSAGE = "已开启电量数字中间常显，请先关闭。"
         private val RESTRICTED_KEYS = setOf("wifiScale", "textScale", "showNumber", "autoNumber", "numberThreshold")

@@ -7,8 +7,6 @@ import android.net.wifi.WifiManager
 import android.os.*
 import android.provider.Settings
 import android.telephony.*
-import de.robv.android.xposed.XposedHelpers
-import de.robv.android.xposed.XposedBridge
 import io.github.threeinone.model.*
 import java.lang.reflect.Proxy
 
@@ -18,6 +16,7 @@ class SystemStateSource(
     private val context: Context,
     private val controller: Any,
     private val loader: ClassLoader,
+    private val logger: (String) -> Unit,
     private val changed: (IndicatorState) -> Unit,
     private val failed: (Throwable) -> Unit
 ) {
@@ -76,7 +75,7 @@ class SystemStateSource(
             if (initialBattery?.action == Intent.ACTION_BATTERY_CHANGED) {
                 acceptBattery(initialBattery, "initial-sticky")
             } else {
-                XposedBridge.log("3IN1 battery: no initial sticky snapshot; waiting for battery broadcast")
+                logger("3IN1 battery: no initial sticky snapshot; waiting for battery broadcast")
             }
             if (!running) return
             val type = loader.loadClass("com.android.systemui.statusbar.connectivity.SignalCallback")
@@ -98,11 +97,11 @@ class SystemStateSource(
                     runCatching {
                         // addCallback itself reads the mutable controllers to send initial values.
                         val signal = requireNotNull(proxy)
-                        synchronized(requireNotNull(XposedHelpers.getObjectField(controller, "mLock"))) {
+                        synchronized(requireNotNull(Reflect.getObjectField(controller, "mLock"))) {
                             resources.add("signal-callback") {
-                                XposedHelpers.callMethod(controller, "removeCallback", signal)
+                                Reflect.callMethod(controller, "removeCallback", signal)
                             }
-                            XposedHelpers.callMethod(controller, "addCallback", signal)
+                            Reflect.callMethod(controller, "addCallback", signal)
                         }
                         schedule()
                     }.onFailure { error -> main.post { if (publication.accepts(token)) failed(error) } }
@@ -141,7 +140,7 @@ class SystemStateSource(
         // Only log changed battery snapshots, not repeated network/layout callbacks.
         if (lastBatteryLog != details) {
             lastBatteryLog = details
-            XposedBridge.log("3IN1 battery [$origin]: $details")
+            logger("3IN1 battery [$origin]: $details")
         }
     }
 
@@ -149,7 +148,7 @@ class SystemStateSource(
         val subId = SubscriptionManager.getDefaultDataSubscriptionId()
         val values = reader.capture(subId)
         // Same current-network API used by this firmware's WifiStatusTracker.
-        val network = XposedHelpers.callMethod(context.getSystemService(WifiManager::class.java),
+        val network = Reflect.callMethod(context.getSystemService(WifiManager::class.java),
             "getCurrentNetwork") as? Network
         val caps = network?.let { connectivity.getNetworkCapabilities(it) }
         val wifiPhase = WifiStatus.phase(values.wifiEnabled, values.wifiTransient,
