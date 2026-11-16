@@ -222,7 +222,9 @@ private class ColorOsAdapter(private val loader: ClassLoader) {
                             .mapNotNull { SignalScope.slot(it) }
                         if (excluded.isEmpty()) return@guarded
                         @Suppress("UNCHECKED_CAST")
-                        val slots = XposedHelpers.getObjectField(group, "mIgnoredSlots") as MutableList<String>
+                        // ColorOS 16: ArrayList, ColorOS 17: Set. Cast to the shared supertype
+                        // instead of MutableList, which threw ClassCastException on ColorOS 17.
+                        val slots = XposedHelpers.getObjectField(group, "mIgnoredSlots") as MutableCollection<String>
                         p.setObjectExtra("3in1.slots", SystemIconPolicy.SlotExclusion(slots, excluded))
                     }
                 }
