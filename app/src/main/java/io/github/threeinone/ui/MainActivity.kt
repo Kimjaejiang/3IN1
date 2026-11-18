@@ -32,6 +32,7 @@ class MainActivity : Activity() {
     private lateinit var prefs: SharedPreferences
     private lateinit var root: LinearLayout
     private lateinit var controls: LinearLayout
+    private lateinit var currentSection: LinearLayout
     private lateinit var small: IndicatorView
     private lateinit var large: IndicatorView
     private lateinit var diagnostic: TextView
@@ -48,7 +49,9 @@ class MainActivity : Activity() {
     private val ink get() = if (dark) Color.rgb(241, 244, 245) else Color.rgb(25, 31, 33)
     private val muted get() = if (dark) Color.rgb(160, 173, 178) else Color.rgb(94, 109, 115)
     private val accent get() = if (dark) Color.rgb(99, 215, 196) else Color.rgb(0, 127, 112)
-    private val background get() = if (dark) Color.rgb(21, 23, 25) else Color.WHITE
+    private val background get() = if (dark) Color.rgb(16, 18, 20) else Color.rgb(244, 246, 247)
+    private val card get() = if (dark) Color.rgb(28, 32, 34) else Color.WHITE
+
     private val sync = Runnable {
         val generation = saveStatus.generation
         val settings = prefs
@@ -113,24 +116,28 @@ class MainActivity : Activity() {
         root = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL
             setBackgroundColor(this@MainActivity.background)
-            setPadding(dp(20), 0, dp(20), 0)
+            setPadding(dp(16), 0, dp(16), 0)
         }
         root.setOnApplyWindowInsetsListener { view, insets ->
             val bars = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
-            view.setPadding(dp(20) + bars.left, bars.top, dp(20) + bars.right, bars.bottom)
+            view.setPadding(dp(16) + bars.left, bars.top, dp(16) + bars.right, bars.bottom)
             insets
         }
         setContentView(root)
-        val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
+        val header = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(0, dp(8), 0, dp(4)) }
         header.addView(ImageView(this).apply {
             setImageResource(R.mipmap.ic_launcher)
+            background = shape(card, 12f)
+            setPadding(dp(4), dp(4), dp(4), dp(4))
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, LinearLayout.LayoutParams(dp(36), dp(36)).apply { marginEnd = dp(10) })
-        header.addView(label("3IN1", 26f).apply {
+            clipToOutline = true
+        }, LinearLayout.LayoutParams(dp(40), dp(40)).apply { marginEnd = dp(12) })
+        val titles = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        titles.addView(label("3IN1", 24f).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            gravity = Gravity.CENTER_VERTICAL
-        },
-            LinearLayout.LayoutParams(0, dp(58), 1f))
+        })
+        titles.addView(label("状态栏三合一指示器", 12f, muted))
+        header.addView(titles, LinearLayout.LayoutParams(0, -2, 1f))
         header.addView(iconButton(android.R.drawable.ic_menu_revert, "恢复默认") {
             AlertDialog.Builder(this).setTitle("恢复默认设置？")
                 .setMessage("恢复全部外观参数并关闭系统替换。")
@@ -142,32 +149,40 @@ class MainActivity : Activity() {
         })
         root.addView(header)
 
+        val previewCard = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = shape(card, 20f)
+            setPadding(dp(12), dp(12), dp(12), dp(12))
+        }
         val previews = LinearLayout(this).apply { gravity = Gravity.CENTER_VERTICAL }
         val natural = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-            setPadding(dp(8), dp(12), dp(8), dp(12))
+            background = shape(if (dark) 0xFF1A1E20.toInt() else 0xFFF4F6F7.toInt(), 14f)
+            setPadding(dp(8), dp(10), dp(8), dp(10))
         }
         val actualFrame = FrameLayout(this)
         small = IndicatorView(this).apply { tint = ink }
         actualFrame.addView(small, FrameLayout.LayoutParams(dp(22), dp(28), Gravity.CENTER))
-        natural.addView(actualFrame, LinearLayout.LayoutParams(-1, dp(76)))
+        natural.addView(actualFrame, LinearLayout.LayoutParams(-1, dp(68)))
         natural.addView(label("实际尺寸", 12f, muted).apply { gravity = Gravity.CENTER })
-        previews.addView(natural, LinearLayout.LayoutParams(0, dp(130), 1f))
+        previews.addView(natural, LinearLayout.LayoutParams(0, dp(118), 1f).apply { marginEnd = dp(8) })
         val enlarged = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; gravity = Gravity.CENTER
-            background = shape(Color.rgb(21, 25, 27), 6f)
+            background = shape(Color.rgb(18, 22, 24), 14f)
+            setPadding(dp(4), dp(8), dp(4), dp(8))
         }
         large = IndicatorView(this).apply { tint = Color.WHITE }
-        enlarged.addView(large, LinearLayout.LayoutParams(dp(90), dp(104)))
+        enlarged.addView(large, LinearLayout.LayoutParams(dp(90), dp(88)))
         enlarged.addView(label("放大预览", 12f, Color.rgb(181, 195, 200)).apply { gravity = Gravity.CENTER })
-        previews.addView(enlarged, LinearLayout.LayoutParams(0, dp(130), 1f))
-        root.addView(previews)
-
+        previews.addView(enlarged, LinearLayout.LayoutParams(0, dp(118), 1f))
+        previewCard.addView(previews)
         val spinner = Spinner(this).apply {
             contentDescription = "预览状态"
             adapter = ArrayAdapter(this@MainActivity, android.R.layout.simple_spinner_dropdown_item,
                 IndicatorState.previews.map { it.first })
             setSelection(previewIndex)
+            background = shape(if (dark) 0xFF22272A.toInt() else 0xFFF4F6F7.toInt(), 12f)
+            setPadding(dp(8), dp(4), dp(8), dp(4))
             onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) {
                     previewIndex = position; updatePreview()
@@ -175,11 +190,15 @@ class MainActivity : Activity() {
                 override fun onNothingSelected(parent: AdapterView<*>?) = Unit
             }
         }
-        root.addView(spinner, LinearLayout.LayoutParams(-1, dp(44)))
+        previewCard.addView(spinner, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(10) })
         val malformed = SafePreferences.malformedKeys(prefs)
         saved = label(if (malformed.isEmpty()) "本机设置"
-            else "配置类型异常，已使用默认值；可恢复默认", 12f, muted)
-        root.addView(saved, LinearLayout.LayoutParams(-1, dp(24)))
+            else "配置类型异常，已使用默认值；可恢复默认", 12f, muted).apply {
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(4), dp(8), dp(4), 0)
+        }
+        previewCard.addView(saved, LinearLayout.LayoutParams(-1, -2))
+        root.addView(previewCard, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8); bottomMargin = dp(4) })
         val scroll = ScrollView(this).apply { isFillViewport = true; clipToPadding = false }
         controls = LinearLayout(this).apply {
             orientation = LinearLayout.VERTICAL; setPadding(0, dp(8), 0, dp(24))
@@ -215,30 +234,26 @@ class MainActivity : Activity() {
         diagnostic = label("尚未收到 SystemUI 回执", 13f, muted).apply { setTextIsSelectable(true) }
         diagnosticsRow.addView(diagnostic, LinearLayout.LayoutParams(0, -2, 1f))
         diagnosticsRow.addView(iconButton(android.R.drawable.ic_popup_sync, "刷新诊断") { probe() })
-        controls.addView(diagnosticsRow)
-        val recovery = Button(this).apply {
-            text = "恢复原图标"
-            setOnClickListener { prefs.edit().putBoolean("enabled", false).apply(); buildPage(); scheduleSave() }
+        currentSection.addView(diagnosticsRow)
+        val recovery = actionButton("恢复原图标") {
+            prefs.edit().putBoolean("enabled", false).apply(); buildPage(); scheduleSave()
         }
-        controls.addView(recovery, LinearLayout.LayoutParams(-1, dp(52)))
-        controls.addView(Button(this).apply {
-            text = "关于"
-            setOnClickListener {
-                val version = packageManager.getPackageInfo(packageName, 0).versionName
-                AlertDialog.Builder(this@MainActivity)
-                    .setTitle("关于 3IN1")
-                    .setIcon(R.mipmap.ic_launcher)
-                    .setMessage("版本 $version")
-                    .setNegativeButton("关闭", null)
-                    .setPositiveButton("作者主页") { _, _ ->
-                        try {
-                            startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.coolapk.com/u/17348848")))
-                        } catch (_: ActivityNotFoundException) {
-                            Toast.makeText(this@MainActivity, "未找到可打开链接的应用", Toast.LENGTH_SHORT).show()
-                        }
-                    }.show()
-            }
-        }, LinearLayout.LayoutParams(-1, dp(52)))
+        currentSection.addView(recovery, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8) })
+        currentSection.addView(actionButton("关于") {
+            val version = packageManager.getPackageInfo(packageName, 0).versionName
+            AlertDialog.Builder(this@MainActivity)
+                .setTitle("关于 3IN1")
+                .setIcon(R.mipmap.ic_launcher)
+                .setMessage("版本 $version")
+                .setNegativeButton("关闭", null)
+                .setPositiveButton("作者主页") { _, _ ->
+                    try {
+                        startActivity(Intent(Intent.ACTION_VIEW, Uri.parse("https://www.coolapk.com/u/17348848")))
+                    } catch (_: ActivityNotFoundException) {
+                        Toast.makeText(this@MainActivity, "未找到可打开链接的应用", Toast.LENGTH_SHORT).show()
+                    }
+                }.show()
+        }, LinearLayout.LayoutParams(-1, dp(48)).apply { topMargin = dp(8); bottomMargin = dp(4) })
         updateRestrictions()
         updatePreview()
     }
@@ -293,18 +308,25 @@ class MainActivity : Activity() {
     }
 
     private fun section(name: String) {
-        val divider = View(this).apply { setBackgroundColor(if (dark) 0xFF303638.toInt() else 0xFFE7EBEC.toInt()) }
-        controls.addView(divider, LinearLayout.LayoutParams(-1, dp(1)).apply { topMargin = dp(16); bottomMargin = dp(12) })
-        controls.addView(label(name, 18f).apply {
+        currentSection = LinearLayout(this).apply {
+            orientation = LinearLayout.VERTICAL
+            background = shape(card, 18f)
+            setPadding(dp(16), dp(14), dp(16), dp(12))
+        }
+        controls.addView(currentSection, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
+        currentSection.addView(label(name, 13f, accent).apply {
             typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
-            setPadding(0, 0, 0, dp(8))
+            letterSpacing = 0.04f
+            setPadding(0, 0, 0, dp(4))
         })
     }
 
     private fun toggle(title: String, key: String, default: Boolean, confirm: Boolean = false) {
         val widget = Switch(this).apply {
             text = title; textSize = 16f; setTextColor(ink); isChecked = SafePreferences.boolean(prefs, key, default)
-            setPadding(0, dp(12), 0, dp(12)); minHeight = dp(52)
+            setPadding(0, dp(10), 0, dp(10)); minHeight = dp(48)
+            thumbTintList = ColorStateList.valueOf(accent)
+            trackTintList = ColorStateList.valueOf(if (dark) Color.rgb(64, 78, 80) else Color.rgb(196, 214, 212))
         }
         var internal = false
         val numberMode = key == "showNumber" || key == "autoNumber"
@@ -393,7 +415,7 @@ class MainActivity : Activity() {
             RestrictedSetting(this, title, content).also { restrictedSettings.add(it) }
         } else content
         view.tag = key
-        controls.addView(view, LinearLayout.LayoutParams(-1, -2))
+        currentSection.addView(view, LinearLayout.LayoutParams(-1, -2))
     }
 
     private class RestrictedSetting(context: Context, private val title: String, private val content: View) :
@@ -464,7 +486,7 @@ class MainActivity : Activity() {
         val row = LinearLayout(this).apply {
             orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
             setPadding(dp(12), dp(10), dp(12), dp(10))
-            background = shape(if (dark) 0xFF262B2E.toInt() else 0xFFF1F4F5.toInt(), 4f)
+            background = shape(if (dark) 0xFF22272A.toInt() else 0xFFF4F6F7.toInt(), 12f)
             isClickable = true; isFocusable = true; contentDescription = "$title 颜色"
         }
         val color = SafePreferences.integer(prefs, key, default)
@@ -506,9 +528,17 @@ class MainActivity : Activity() {
             }
             dialog.show()
         }
-        controls.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
+        currentSection.addView(row, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(8) })
     }
 
+    private fun actionButton(title: String, action: () -> Unit) = Button(this).apply {
+        text = title
+        isAllCaps = false
+        textSize = 15f
+        setTextColor(ink)
+        background = shape(if (dark) 0xFF22272A.toInt() else 0xFFF4F6F7.toInt(), 14f)
+        setOnClickListener { action() }
+    }
     private fun iconButton(icon: Int, title: String, action: () -> Unit) = ImageButton(this).apply {
         setImageResource(icon); imageTintList = ColorStateList.valueOf(accent)
         background = null; contentDescription = title; tooltipText = title
